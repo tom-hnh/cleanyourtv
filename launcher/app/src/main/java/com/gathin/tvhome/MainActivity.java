@@ -121,7 +121,9 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     private long settingsRevision;
     /** Idle time on Home before ClockActivity; 0 is off (config.xml, home_idle_clock_minutes). */
     private long idleClockMs;
-    private final Runnable showIdleClock = () -> startActivity(new Intent(this, ClockActivity.class));
+    private final Runnable showIdleClock = this::showScreensaver;
+    /** screensaver_activity: the app activity shown instead of the clock; null for the clock. */
+    private ComponentName screensaverActivity;
     private String liveTvAction;
     private String liveTvInputId;
     /** The app library is on (config.xml, app_library): only then can the tile menu take an app off Home. */
@@ -416,6 +418,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         festive = festival.active(LocalDate.now());
         liveTvPkg = cfg.liveTvPackage;
         idleClockMs = cfg.homeIdleClockMinutes * MINUTE_MS;
+        screensaverActivity = cfg.screensaverActivity.isEmpty() ? null : ComponentName.unflattenFromString(cfg.screensaverActivity);
         bootToLiveTv = cfg.bootToLiveTv;
         openOnStartChoice = cfg.openOnStartChoice;
         liveTvAction = cfg.liveTvAction;
@@ -1268,7 +1271,8 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         // Back does nothing on Home and reaches this window directly, so a held one needs no key helper.
         if (backHoldScreensaver && !reordering && openPopup == null && cardPrompt == null
                 && event.getKeyCode() == KeyEvent.KEYCODE_BACK
-                && RemoteKeys.handle(this, event, null, "screensaver")) return true;
+                && RemoteKeys.handle(this, event, null,
+                        screensaverActivity != null ? screensaverActivity.flattenToShortString() : "screensaver")) return true;
         if (tileMenuEnabled && !reordering && openPopup == null && cardPrompt == null
                 && event.getKeyCode() == KeyEvent.KEYCODE_MENU) {
             int position = focusedTilePosition();
@@ -1596,6 +1600,20 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     @Override
     public void onBackPressed() {
         // Home screen: Back goes nowhere.
+    }
+
+    /** Home left idle: screensaver_activity, an ordinary activity that an app (AirPlay, say) can still open over,
+     *  unlike the system screensaver; the clock when it is unset or not installed. */
+    private void showScreensaver() {
+        if (screensaverActivity != null) {
+            try {
+                startActivity(new Intent().setComponent(screensaverActivity));
+                return;
+            } catch (ActivityNotFoundException | SecurityException unavailable) {
+                // uninstalled or not exported: the clock instead
+            }
+        }
+        startActivity(new Intent(this, ClockActivity.class));
     }
 
     // ---- glass highlight -------------------------------------------------------------------------

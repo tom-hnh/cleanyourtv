@@ -462,7 +462,13 @@
          Unlike the system screensaver this never starts over live TV or an app, which matters on TVs whose
          Live TV window does not keep the screen on (CVTE): there the system screensaver would start in the
          middle of a programme. Can also be set with "home_idle_clock_minutes": 10 in a theme's config.json. -->
-    <integer name="home_idle_clock_minutes">0</integer>
+    <integer name="home_idle_clock_minutes">5</integer>
+    <!-- An app's activity, as "package/.Activity", that home_idle_clock_minutes and back_hold_screensaver open in
+         place of the clock, e.g. com.neilturner.aerialviews/.ui.screensaver.TestActivity for Aerial Views. As an
+         ordinary activity it lets an app that opens itself (AirPlay mirroring, say) come over it, which the system
+         screensaver does not. The clock if the app is missing. Leave empty for the clock. Can also be set with
+         "screensaver_activity" in a theme. -->
+    <string name="screensaver_activity" translatable="false">com.neilturner.aerialviews/.ui.screensaver.TestActivity</string>
     <!-- The clock screensaver (Home idle clock and the system screensaver) over Home's wallpaper instead of black with
          a coloured glow. The clock still moves every minute. Can also be set with "clock_wallpaper" in a theme. -->
     <bool name="clock_wallpaper">false</bool>
